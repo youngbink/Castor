@@ -19,10 +19,12 @@ def get_map_mrr(qids, predictions, labels, device=0, keep_results=False, string_
     qrel_template = '{qid} 0 {docno} {rel}\n'
     results_template = '{qid} 0 {docno} 0 {sim} mpcnn\n'
     if string_id_index is not None:
-        with open(f"{string_id_index}-index.pkl", "rb") as index_file:
+        index_file_name = f"{string_id_index}-index.pkl", "rb"
+        with open(index_file_name) as index_file:
             import pickle
             index = pickle.load(index_file)
-            qids = [index[qid] for qid in qids]
+            qids = [index[int(qid)] for qid in qids]
+        os.remove(index_file_name)
 
     with open(qrel_fname, 'w') as f1, open(results_fname, 'w') as f2:
         docnos = range(len(qids))

@@ -24,7 +24,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
     AID_FIELD = None
 
     @abstractmethod
-    def __init__(self, path, load_ext_feats=False):
+    def __init__(self, path, load_ext_feats=False, store_index_mode="test"):
         """
         Create a Castor dataset involving pairs of texts
         """
@@ -69,9 +69,11 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
                     int_id += 1
                     prev = qid
 
-            with open(f"{os.path.basename(path)}-index.pkl", 'wb') as index_f:
-                import pickle
-                pickle.dump(index, index_f)
+            mode = os.path.basename(path)
+            if mode == store_index_mode:
+                with open(f"{mode}-index.pkl", 'wb') as index_f:
+                    import pickle
+                    pickle.dump(index, index_f)
 
             # modify id_list: List(str) => List(Int)
             id_list = [inverted_index[qid] for qid in id_list]
