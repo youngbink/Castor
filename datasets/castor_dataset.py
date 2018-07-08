@@ -48,7 +48,14 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
         with open(os.path.join(path, 'id.txt'), 'r') as id_file:
             id_list = [l.rstrip('.\n') for l in id_file]
 
-        if isinstance(id_list[0], str):
+        def is_float(num):
+            try:
+                float(num)
+            except ValueError:
+                return False
+            return True
+
+        if not is_float(id_list[0]):  # temp hacky soln
             # create inverted index & index
             index = []
             inverted_index = {}
@@ -62,7 +69,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
                     int_id += 1
                     prev = qid
 
-            with open(os.path.join(os.path.basename(path), '-index.pkl'), 'wb') as index_f:
+            with open(f"{os.path.basename(path)}-index.pkl", 'wb') as index_f:
                 import pickle
                 pickle.dump(index, index_f)
 

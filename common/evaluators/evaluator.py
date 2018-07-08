@@ -3,7 +3,8 @@ class Evaluator(object):
     Evaluates a model on a Dataset, using metrics specific to the Dataset.
     """
 
-    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device, keep_results=False):
+    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device, keep_results=False,
+                 string_id_index=None):
         self.dataset_cls = dataset_cls
         self.model = model
         self.embedding = embedding
@@ -11,6 +12,7 @@ class Evaluator(object):
         self.batch_size = batch_size
         self.device = device
         self.keep_results = keep_results
+        self.string_id_index = string_id_index
 
     def get_sentence_embeddings(self, batch):
         sent1 = self.embedding(batch.sentence_1).transpose(1, 2)

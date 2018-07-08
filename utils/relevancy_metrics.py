@@ -3,7 +3,7 @@ import subprocess
 import time
 
 
-def get_map_mrr(qids, predictions, labels, device=0, keep_results=False):
+def get_map_mrr(qids, predictions, labels, device=0, keep_results=False, string_id_index=None):
     """
     Get the map and mrr using the trec_eval utility.
     qids, predictions, labels should have the same length.
@@ -18,6 +18,12 @@ def get_map_mrr(qids, predictions, labels, device=0, keep_results=False):
     results_fname = 'trecqa_{}_{}.results'.format(time.time(), device)
     qrel_template = '{qid} 0 {docno} {rel}\n'
     results_template = '{qid} 0 {docno} 0 {sim} mpcnn\n'
+    if string_id_index is not None:
+        with open(f"{string_id_index}-index.pkl", "rb") as index_file:
+            import pickle
+            index = pickle.load(index_file)
+            qids = [index[qid] for qid in qids]
+
     with open(qrel_fname, 'w') as f1, open(results_fname, 'w') as f2:
         docnos = range(len(qids))
         for qid, docno, predicted, actual in zip(qids, docnos, predictions, labels):

@@ -30,6 +30,7 @@ class QAEvaluator(Evaluator):
 
         mean_average_precision, mean_reciprocal_rank = get_map_mrr(qids, predictions, true_labels,
                                                                    self.data_loader.device,
+                                                                   string_id_index=self.string_id_index,
                                                                    keep_results=self.keep_results)
         test_cross_entropy_loss /= len(batch.dataset.examples)
 
