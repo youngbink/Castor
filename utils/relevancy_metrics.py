@@ -18,16 +18,24 @@ def get_map_mrr(qids, predictions, labels, device=0, keep_results=False, string_
     results_fname = 'trecqa_{}_{}.results'.format(time.time(), device)
     qrel_template = '{qid} 0 {docno} {rel}\n'
     results_template = '{qid} 0 {docno} 0 {sim} mpcnn\n'
+    docnos = range(len(qids))
+
     if string_id_index is not None:
-        index_file_name = f"{string_id_index}-index.pkl", "rb"
-        with open(index_file_name) as index_file:
-            import pickle
-            index = pickle.load(index_file)
-            qids = [index[int(qid)] for qid in qids]
-        os.remove(index_file_name)
+        import pickle
+
+        def load_index(index_type):
+            index_file_name = f"{string_id_index}-{index_type}_index.pkl"
+            with open(index_file_name, "rb") as index_file:
+                index = pickle.load(index_file)
+            os.remove(index_file_name)
+            return index
+
+        q_index = load_index("q")
+        qids = [q_index[int(qid)] for qid in qids]
+        doc_index = load_index("doc")
+        docnos = [doc_index[int(docid)] for docid in docnos]
 
     with open(qrel_fname, 'w') as f1, open(results_fname, 'w') as f2:
-        docnos = range(len(qids))
         for qid, docno, predicted, actual in zip(qids, docnos, predictions, labels):
             f1.write(qrel_template.format(qid=qid, docno=docno, rel=actual))
             f2.write(results_template.format(qid=qid, docno=docno, sim=predicted))

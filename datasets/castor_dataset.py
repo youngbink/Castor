@@ -24,7 +24,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
     AID_FIELD = None
 
     @abstractmethod
-    def __init__(self, path, load_ext_feats=False, store_index_mode="test"):
+    def __init__(self, path, load_ext_feats=False, convert_string_id=False, store_index_mode="test"):
         """
         Create a Castor dataset involving pairs of texts
         """
@@ -48,33 +48,31 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
         with open(os.path.join(path, 'id.txt'), 'r') as id_file:
             id_list = [l.rstrip('.\n') for l in id_file]
 
-        def is_float(num):
-            try:
-                float(num)
-            except ValueError:
-                return False
-            return True
+        if convert_string_id:
+            def create_index(doc_list):
+                index = []
+                inverted_index = {}
+                for doc_id in doc_list:
+                    if doc_id not in inverted_index:
+                        index.append(doc_id)
+                        inverted_index[doc_id] = len(index)
+                return index, inverted_index
 
-        if not is_float(id_list[0]):  # temp hacky soln
-            # create inverted index & index
-            index = []
-            inverted_index = {}
-            prev = None
-            for qid in id_list:
-                # assume sorted
-                if qid != prev:
-                    index.append(qid)
-                    inverted_index[qid] = len(index)
-                    prev = qid
+            q_index, q_inverted_index = create_index(id_list)
 
             mode = os.path.basename(path)
             if mode == store_index_mode:
-                with open(f"{mode}-index.pkl", 'wb') as index_f:
-                    import pickle
-                    pickle.dump(index, index_f)
+                import pickle
+                with open(f"{mode}-q_index.pkl", 'wb') as index_f:
+                    pickle.dump(q_index, index_f)
+
+                # hacky
+                with open(os.path.join(path, 'docid.txt'), 'r') as docid_in, open(f"{mode}-doc_index.pkl", 'wb') as out:
+                    docid_list = [l.rstrip('.\n') for l in docid_in]
+                    pickle.dump(docid_list, out)
 
             # modify id_list: List(str) => List(Int)
-            id_list = [inverted_index[qid] for qid in id_list]
+            id_list = [q_inverted_index[qid] for qid in id_list]
 
         with open(os.path.join(path, 'sim.txt'), 'r') as label_file:
             for i, (qid, l1, l2, ext_feats, label) in enumerate(zip(id_list, sent_list_1, sent_list_2, overlap_feats, label_file)):
