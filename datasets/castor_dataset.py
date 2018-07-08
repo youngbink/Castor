@@ -45,11 +45,34 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
         else:
             overlap_feats = np.loadtxt(os.path.join(path, 'overlap_feats.txt'))
 
-        with open(os.path.join(path, 'id.txt'), 'r') as id_file, open(os.path.join(path, 'sim.txt'), 'r') as label_file:
-            for i, (pair_id, l1, l2, ext_feats, label) in enumerate(zip(id_file, sent_list_1, sent_list_2, overlap_feats, label_file)):
-                pair_id = pair_id.rstrip('.\n')
+        with open(os.path.join(path, 'id.txt'), 'r') as id_file:
+            id_list = [l.rstrip('.\n') for l in id_file]
+
+        if isinstance(id_list[0], str):
+            # create inverted index & index
+            index = []
+            inverted_index = {}
+            prev = None
+            int_id = 0
+            for qid in id_list:
+                # assume sorted
+                if qid != prev:
+                    index.append(qid)
+                    inverted_index[qid] = int_id
+                    int_id += 1
+                    prev = qid
+
+            with open(os.path.join(os.path.basename(path), '-index.pkl'), 'wb') as index_f:
+                import pickle
+                pickle.dump(index, index_f)
+
+            # modify id_list: List(str) => List(Int)
+            id_list = [inverted_index[qid] for qid in id_list]
+
+        with open(os.path.join(path, 'sim.txt'), 'r') as label_file:
+            for i, (qid, l1, l2, ext_feats, label) in enumerate(zip(id_list, sent_list_1, sent_list_2, overlap_feats, label_file)):
                 label = label.rstrip('.\n')
-                example_list = [pair_id, l1, l2, ext_feats, label, i + 1, ' '.join(l1), ' '.join(l2)]
+                example_list = [qid, l1, l2, ext_feats, label, i + 1, ' '.join(l1), ' '.join(l2)]
                 example = Example.fromlist(example_list, fields)
                 examples.append(example)
 
