@@ -60,13 +60,11 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
             index = []
             inverted_index = {}
             prev = None
-            int_id = 0
             for qid in id_list:
                 # assume sorted
                 if qid != prev:
                     index.append(qid)
-                    inverted_index[qid] = int_id
-                    int_id += 1
+                    inverted_index[qid] = len(index)
                     prev = qid
 
             mode = os.path.basename(path)
